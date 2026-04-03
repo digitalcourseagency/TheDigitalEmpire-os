@@ -1,24 +1,31 @@
 "use client";
 import{useEffect,useState}from"react";
 import{supabase}from"@/lib/supabase";
-import{Plus,Camera}from"lucide-react";
+import{Plus,X,Camera}from"lucide-react";
+const BRANDS=[{id:'20e8bb0e-29fd-492e-ad91-2beb239e4b0f',abbr:'AC',color:'#2C2C2A'},{id:'caa9919a-5fe0-4e67-844a-fd75f3170516',abbr:'DCA',color:'#C8432A'},{id:'ba48df91-58dc-4471-93f4-1c2a9ba69d35',abbr:'DES',color:'#185FA5'},{id:'a80ef03f-697b-47da-9c73-81b9b4d2717e',abbr:'LLL',color:'#888480'},{id:'f4aec731-0842-493e-b17f-56e5265318ac',abbr:'OOG',color:'#B89A5A'},{id:'41d737ec-4a5a-425c-9f1e-ad509988c3d8',abbr:'TDI',color:'#534AB7'}];
 export default function Page(){
   const[data,setData]=useState<any[]>([]);
   const[loading,setLoading]=useState(true);
-  useEffect(()=>{supabase.from("shoots").select("*").order("shoot_date",{ascending:true}).then(({data:d})=>{setData(d||[]);setLoading(false);});},[]);
-  const STATUS_COLOR:Record<string,string>={Planned:"#EDE8E1",Confirmed:"#FEF3C7",Shooting:"#DBEAFE",Editing:"#E0E7FF",Complete:"#D1FAE5"};
+  const[open,setOpen]=useState(false);
+  const[form,setForm]=useState({name:'',brand_id:'',shoot_date:'',location:'',theme:'',status:'Planned',outfits_count:'',content_count_target:''});
+  const[saving,setSaving]=useState(false);
+  const STATUS_COLOR:Record<string,string>={Planned:'#EDE8E1',Confirmed:'#FEF3C7',Shooting:'#DBEAFE',Editing:'#E0E7FF',Complete:'#D1FAE5'};
+  useEffect(()=>{load();},[]);
+  async function load(){const{data:d}=await supabase.from('shoots').select('*').order('shoot_date',{ascending:true});setData(d||[]);setLoading(false);}
+  async function save(){
+    if(!form.name)return;
+    setSaving(true);
+    await supabase.from('shoots').insert({name:form.name,brand_id:form.brand_id||null,shoot_date:form.shoot_date||null,location:form.location||null,theme:form.theme||null,status:form.status,outfits_count:form.outfits_count?Number(form.outfits_count):null,content_count_target:form.content_count_target?Number(form.content_count_target):null});
+    setSaving(false);setOpen(false);setForm({name:'',brand_id:'',shoot_date:'',location:'',theme:'',status:'Planned',outfits_count:'',content_count_target:''});load();
+  }
   return(
-    <div style={{maxWidth:1000,animation:"slideUp 0.4s ease"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
-        <div><h1 className="font-display" style={{fontSize:34,fontWeight:400}}>Content Shoots</h1><div style={{fontSize:13,color:"#9A9188",marginTop:2}}>{data.length} shoots</div></div>
-        <button className="btn btn-primary"><Plus size={14}/> Plan Shoot</button>
+    <div style={{maxWidth:1000}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+        <div><h1 style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:400}}>Content Shoots</h1><div style={{fontSize:13,color:'#9A9188',marginTop:2}}>{data.length} shoots</div></div>
+        <button className="btn btn-primary" onClick={()=>setOpen(true)}><Plus size={14}/> Plan Shoot</button>
       </div>
-      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(
-        <div style={{textAlign:"center",padding:"64px 0"}}><Camera size={32} color="#B8B0A5" style={{margin:"0 auto 12px"}}/><div style={{fontSize:13,color:"#9A9188"}}>No shoots planned yet.</div></div>
-      ):(
-        <div style={{display:"grid",gap:12}}>{data.map((s:any)=>(<div key={s.id} className="card" style={{borderLeft:"4px solid #B89A5A"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><span style={{fontSize:15,fontWeight:500}}>{s.name}</span><span style={{fontSize:11,padding:"2px 8px",borderRadius:100,background:STATUS_COLOR[s.status||"Planned"]||"#EDE8E1",color:"#7D7470",marginLeft:10}}>{s.status}</span></div>{s.shoot_date&&<div style={{fontSize:12,color:"#9A9188"}}>{new Date(s.shoot_date).toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"})}</div>}</div>{s.theme&&<div style={{fontSize:12,color:"#7D7470",marginTop:6}}>{s.theme}</div>}</div>))}
-        </div>
-      )}
+      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(<div style={{textAlign:'center',padding:'64px 0'}}><Camera size={32} color="#B8B0A5" style={{margin:'0 auto 12px'}}/><div style={{fontSize:13,color:'#9A9188',marginBottom:12}}>No shoots planned yet.</div><button className="btn btn-primary" onClick={()=>setOpen(true)}>Plan Your First Shoot</button></div>):(<div style={{display:'grid',gap:12}}>{data.map((s:any)=>(<div key={s.id} className="card" style={{borderLeft:'4px solid #B89A5A'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><div><span style={{fontSize:15,fontWeight:500}}>{s.name}</span><span style={{fontSize:11,padding:'2px 8px',borderRadius:100,background:STATUS_COLOR[s.status||'Planned'],color:'#7D7470',marginLeft:10}}>{s.status}</span></div>{s.shoot_date&&<div style={{fontSize:12,color:'#9A9188'}}>{new Date(s.shoot_date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>}</div>{s.theme&&<div style={{fontSize:12,color:'#7D7470',marginTop:6}}>{s.theme}</div>}</div>))}</div>)}
+      {open&&<div className="modal-overlay" onClick={()=>setOpen(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontFamily:'Georgia,serif',fontSize:22}}>Plan Shoot</div><button onClick={()=>setOpen(false)} style={{background:'none',border:'none',cursor:'pointer'}}><X size={18}/></button></div><div style={{display:'grid',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Shoot Name *</label><input className="input" placeholder="NYC Spring Shoot" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Brand</label><select className="input" value={form.brand_id} onChange={e=>setForm(f=>({...f,brand_id:e.target.value}))}><option value="">Select brand</option>{BRANDS.map(b=>(<option key={b.id} value={b.id}>{b.abbr}</option>))}</select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Status</label><select className="input" value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}><option>Planned</option><option>Confirmed</option><option>Shooting</option><option>Editing</option><option>Complete</option></select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Shoot Date</label><input className="input" type="date" value={form.shoot_date} onChange={e=>setForm(f=>({...f,shoot_date:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Location</label><input className="input" placeholder="Brooklyn Studio" value={form.location} onChange={e=>setForm(f=>({...f,location:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Outfits</label><input className="input" type="number" placeholder="4" value={form.outfits_count} onChange={e=>setForm(f=>({...f,outfits_count:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Content Target</label><input className="input" type="number" placeholder="20" value={form.content_count_target} onChange={e=>setForm(f=>({...f,content_count_target:e.target.value}))}/></div></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Theme / Vibe</label><input className="input" placeholder="Luxury casual, cream tones" value={form.theme} onChange={e=>setForm(f=>({...f,theme:e.target.value}))}/></div></div><div style={{display:'flex',gap:10,marginTop:20,justifyContent:'flex-end'}}><button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving...':'Save'}</button></div></div></div>}
     </div>
   );
 }
