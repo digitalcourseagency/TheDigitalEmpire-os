@@ -1,22 +1,30 @@
 "use client";
 import{useEffect,useState}from"react";
 import{supabase}from"@/lib/supabase";
-import{Plus}from"lucide-react";
+import{Plus,X}from"lucide-react";
+const BRANDS=[{id:'20e8bb0e-29fd-492e-ad91-2beb239e4b0f',abbr:'AC',color:'#2C2C2A'},{id:'caa9919a-5fe0-4e67-844a-fd75f3170516',abbr:'DCA',color:'#C8432A'},{id:'ba48df91-58dc-4471-93f4-1c2a9ba69d35',abbr:'DES',color:'#185FA5'},{id:'a80ef03f-697b-47da-9c73-81b9b4d2717e',abbr:'LLL',color:'#888480'},{id:'f4aec731-0842-493e-b17f-56e5265318ac',abbr:'OOG',color:'#B89A5A'},{id:'41d737ec-4a5a-425c-9f1e-ad509988c3d8',abbr:'TDI',color:'#534AB7'}];
 export default function Page(){
   const[data,setData]=useState<any[]>([]);
   const[loading,setLoading]=useState(true);
-  useEffect(()=>{supabase.from("launches").select("*").order("created_at",{ascending:false}).then(({data:d})=>{setData(d||[]);setLoading(false);});},[]);
+  const[open,setOpen]=useState(false);
+  const[form,setForm]=useState({name:'',brand_id:'',offer:'',price:'',revenue_goal:'',launch_date:'',status:'Planning',manychat_keyword:''});
+  const[saving,setSaving]=useState(false);
+  useEffect(()=>{load();},[]);
+  async function load(){const{data:d}=await supabase.from('launches').select('*').order('created_at',{ascending:false});setData(d||[]);setLoading(false);}
+  async function save(){
+    if(!form.name)return;
+    setSaving(true);
+    await supabase.from('launches').insert({name:form.name,brand_id:form.brand_id||null,offer:form.offer||null,price:form.price?Number(form.price):null,revenue_goal:form.revenue_goal?Number(form.revenue_goal):null,launch_date:form.launch_date||null,status:form.status,manychat_keyword:form.manychat_keyword||null,revenue_closed:0});
+    setSaving(false);setOpen(false);setForm({name:'',brand_id:'',offer:'',price:'',revenue_goal:'',launch_date:'',status:'Planning',manychat_keyword:''});load();
+  }
   return(
-    <div style={{maxWidth:1100,animation:"slideUp 0.4s ease"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:28}}>
-        <div><h1 className="font-display" style={{fontSize:34,fontWeight:400}}>Launches</h1><div style={{fontSize:13,color:"#9A9188",marginTop:2}}>{data.length} launches tracked</div></div>
-        <button className="btn btn-primary"><Plus size={14}/> Plan Launch</button>
+    <div style={{maxWidth:1100}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:28}}>
+        <div><h1 style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:400}}>Launches</h1><div style={{fontSize:13,color:'#9A9188',marginTop:2}}>{data.length} launches tracked</div></div>
+        <button className="btn btn-primary" onClick={()=>setOpen(true)}><Plus size={14}/> Plan Launch</button>
       </div>
-      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(
-        <div style={{textAlign:"center",padding:"64px 0"}}><div style={{fontSize:13,color:"#9A9188"}}>No launches yet. Start planning.</div></div>
-      ):(
-        <div style={{display:"grid",gap:12}}>{data.map((l:any)=>(<div key={l.id} className="card"><div style={{fontWeight:500,fontSize:15}}>{l.name}</div><div style={{fontSize:12,color:"#9A9188",marginTop:4}}>{l.status} {l.revenue_goal?'· Goal: $'+l.revenue_goal.toLocaleString():''}</div></div>))}</div>
-      )}
+      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(<div style={{textAlign:'center',padding:'64px 0'}}><div style={{fontSize:13,color:'#9A9188',marginBottom:12}}>No launches yet. Start planning.</div><button className="btn btn-primary" onClick={()=>setOpen(true)}>Plan Your First Launch</button></div>):(<div style={{display:'grid',gap:12}}>{data.map((l:any)=>{const brand=BRANDS.find(b=>b.id===l.brand_id);const pct=l.revenue_goal>0?Math.min(100,Math.round(((l.revenue_closed||0)/l.revenue_goal)*100)):0;return(<div key={l.id} className="card"><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}><div style={{fontWeight:500,fontSize:15}}>{l.name}</div>{brand&&<span style={{fontSize:11,padding:'2px 8px',borderRadius:100,background:brand.color+'22',color:brand.color}}>{brand.abbr}</span>}</div><div style={{fontSize:12,color:'#9A9188',marginBottom:8}}>{l.status}{l.revenue_goal?' · Goal: $'+l.revenue_goal.toLocaleString():''}</div>{l.revenue_goal>0&&<div className="progress-bar"><div className="progress-fill" style={{width:pct+'%',background:brand?.color||'#B89A5A'}}/></div>}</div>);})}</div>)}
+      {open&&<div className="modal-overlay" onClick={()=>setOpen(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontFamily:'Georgia,serif',fontSize:22}}>Plan Launch</div><button onClick={()=>setOpen(false)} style={{background:'none',border:'none',cursor:'pointer'}}><X size={18}/></button></div><div style={{display:'grid',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Launch Name *</label><input className="input" placeholder="DCA Spring Launch" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Brand</label><select className="input" value={form.brand_id} onChange={e=>setForm(f=>({...f,brand_id:e.target.value}))}><option value="">Select brand</option>{BRANDS.map(b=>(<option key={b.id} value={b.id}>{b.abbr}</option>))}</select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Status</label><select className="input" value={form.status} onChange={e=>setForm(f=>({...f,status:e.target.value}))}><option>Planning</option><option>Warmup</option><option>Launch</option><option>Open Cart</option><option>Closed</option></select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Offer</label><input className="input" placeholder="Teach & Be Rich" value={form.offer} onChange={e=>setForm(f=>({...f,offer:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Price</label><input className="input" type="number" placeholder="997" value={form.price} onChange={e=>setForm(f=>({...f,price:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Revenue Goal</label><input className="input" type="number" placeholder="30000" value={form.revenue_goal} onChange={e=>setForm(f=>({...f,revenue_goal:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Launch Date</label><input className="input" type="date" value={form.launch_date} onChange={e=>setForm(f=>({...f,launch_date:e.target.value}))}/></div></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>ManyChat Keyword</label><input className="input" placeholder="digital stream" value={form.manychat_keyword} onChange={e=>setForm(f=>({...f,manychat_keyword:e.target.value}))}/></div></div><div style={{display:'flex',gap:10,marginTop:20,justifyContent:'flex-end'}}><button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving...':'Save'}</button></div></div></div>}
     </div>
   );
 }
