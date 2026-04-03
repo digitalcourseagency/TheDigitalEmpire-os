@@ -1,11 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Plus } from "lucide-react";
-export default function SeriesPage() {
-  const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  async function load() { setLoading(true); const { data: d } = await supabase.from("series").select("*").order("created_at", { ascending: false }); setData(d || []); setLoading(false); }
-  useEffect(() => { load(); }, []);
-  return (<div style={{ maxWidth: 900, animation: "slideUp 0.4s ease" }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 28 }}><h1 className="font-display" style={{ fontSize: 34, fontWeight: 400 }}>Series</h1><button className="btn btn-primary"><Plus size={14} /> New Series</button></div>{loading ? <div className="skeleton" style={{ height: 200 }} /> : data.length === 0 ? (<div style={{ textAlign: "center", padding: "64px 0" }}><div style={{ fontSize: 13, color: "#9A9188", marginBottom: 12 }}>No series yet.</div><button className="btn btn-primary">Create First Series</button></div>) : (<div style={{ display: "grid", gap: 12 }}>{data.map(s => <div key={s.id} className="card"><div style={{ fontSize: 15, fontWeight: 500 }}>{s.name}</div><div style={{ fontSize: 12, color: "#9A9188", marginTop: 4 }}>{s.platform}</div></div>)}</div>)}</div>);
+import{useEffect,useState}from"react";
+import{supabase}from"@/lib/supabase";
+import{Plus,X,BookOpen}from"lucide-react";
+const BRANDS=[{id:'20e8bb0e-29fd-492e-ad91-2beb239e4b0f',abbr:'AC',color:'#2C2C2A'},{id:'caa9919a-5fe0-4e67-844a-fd75f3170516',abbr:'DCA',color:'#C8432A'},{id:'ba48df91-58dc-4471-93f4-1c2a9ba69d35',abbr:'DES',color:'#185FA5'},{id:'a80ef03f-697b-47da-9c73-81b9b4d2717e',abbr:'LLL',color:'#888480'},{id:'f4aec731-0842-493e-b17f-56e5265318ac',abbr:'OOG',color:'#B89A5A'},{id:'41d737ec-4a5a-425c-9f1e-ad509988c3d8',abbr:'TDI',color:'#534AB7'}];
+export default function Page(){
+  const[data,setData]=useState<any[]>([]);
+  const[loading,setLoading]=useState(true);
+  const[open,setOpen]=useState(false);
+  const[form,setForm]=useState({name:'',brand_id:'',platform:'Instagram',description:'',episodes_planned:'',cadence:'Weekly',status:'Active'});
+  const[saving,setSaving]=useState(false);
+  useEffect(()=>{load();},[]);
+  async function load(){const{data:d}=await supabase.from('series').select('*').order('created_at',{ascending:false});setData(d||[]);setLoading(false);}
+  async function save(){
+    if(!form.name)return;
+    setSaving(true);
+    await supabase.from('series').insert({name:form.name,brand_id:form.brand_id||null,platform:form.platform,description:form.description||null,episodes_planned:form.episodes_planned?Number(form.episodes_planned):null,cadence:form.cadence,status:form.status,episodes_published:0});
+    setSaving(false);setOpen(false);setForm({name:'',brand_id:'',platform:'Instagram',description:'',episodes_planned:'',cadence:'Weekly',status:'Active'});load();
+  }
+  return(
+    <div style={{maxWidth:1000}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:20}}>
+        <div><h1 style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:400}}>Content Series</h1><div style={{fontSize:13,color:'#9A9188',marginTop:2}}>{data.length} series</div></div>
+        <button className="btn btn-primary" onClick={()=>setOpen(true)}><Plus size={14}/> New Series</button>
+      </div>
+      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(<div style={{textAlign:'center',padding:'64px 0'}}><BookOpen size={32} color="#B8B0A5" style={{margin:'0 auto 12px'}}/><div style={{fontSize:13,color:'#9A9188',marginBottom:12}}>No series yet.</div><button className="btn btn-primary" onClick={()=>setOpen(true)}>Create Your First Series</button></div>):(<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>{data.map((s:any)=>{const brand=BRANDS.find(b=>b.id===s.brand_id);return(<div key={s.id} className="card"><div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}><span style={{fontWeight:500,fontSize:14}}>{s.name}</span>{brand&&<span style={{fontSize:10,padding:'2px 8px',borderRadius:100,background:brand.color+'22',color:brand.color}}>{brand.abbr}</span>}</div><div style={{fontSize:11,color:'#9A9188',marginBottom:4}}>{s.platform} · {s.cadence}</div>{s.description&&<div style={{fontSize:11,color:'#7D7470',fontStyle:'italic'}}>{s.description}</div>}<div style={{fontSize:11,color:'#9A9188',marginTop:8}}>{s.episodes_published||0}{s.episodes_planned?' / '+s.episodes_planned:''} episodes</div></div>);})}</div>)}
+      {open&&<div className="modal-overlay" onClick={()=>setOpen(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontFamily:'Georgia,serif',fontSize:22}}>New Series</div><button onClick={()=>setOpen(false)} style={{background:'none',border:'none',cursor:'pointer'}}><X size={18}/></button></div><div style={{display:'grid',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Series Name *</label><input className="input" placeholder="CEO Diaries" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Brand</label><select className="input" value={form.brand_id} onChange={e=>setForm(f=>({...f,brand_id:e.target.value}))}><option value="">Select brand</option>{BRANDS.map(b=>(<option key={b.id} value={b.id}>{b.abbr}</option>))}</select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Platform</label><select className="input" value={form.platform} onChange={e=>setForm(f=>({...f,platform:e.target.value}))}><option>Instagram</option><option>TikTok</option><option>YouTube</option></select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Cadence</label><select className="input" value={form.cadence} onChange={e=>setForm(f=>({...f,cadence:e.target.value}))}><option>Daily</option><option>Weekly</option><option>Biweekly</option><option>Monthly</option></select></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Episodes Planned</label><input className="input" type="number" placeholder="12" value={form.episodes_planned} onChange={e=>setForm(f=>({...f,episodes_planned:e.target.value}))}/></div></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Description</label><textarea className="input" rows={2} placeholder="What this series is about..." value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))}/></div></div><div style={{display:'flex',gap:10,marginTop:20,justifyContent:'flex-end'}}><button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving...':'Save'}</button></div></div></div>}
+    </div>
+  );
 }
