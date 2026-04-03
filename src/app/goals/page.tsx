@@ -1,71 +1,30 @@
 "use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Plus } from "lucide-react";
+import{useEffect,useState}from"react";
+import{supabase}from"@/lib/supabase";
+import{Plus,X}from"lucide-react";
+function Bar({l,a,t,c}:{l:string;a:number;t:number;c:string}){const p=t>0?Math.min(100,Math.round((a/t)*100)):0;return(<div style={{marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:3}}><span style={{color:"#444140"}}>{l}</span><span style={{color:"#9A9188"}}>{a}/{t}</span></div><div className="progress-bar"><div className="progress-fill" style={{width:p+"%",background:c}}/></div></div>);}
 export default function GoalsPage(){
-  const [weeklies,setWeeklies]=useState<any[]>([]);
-  const [quarterly,setQuarterly]=useState<any>(null);
-  const [loading,setLoading]=useState(true);
-  const [showWeekly,setShowWeekly]=useState(false);
-  const [form,setForm]=useState<any>({});
-  const [saving,setSaving]=useState(false);
-  async function load(){setLoading(true);const[{data:wg},{data:qg}]=await Promise.all([supabase.from('weekly_goals').select('*').order('week_of',{ascending:false}).limit(8),supabase.from('quarterly_goals').select('*').order('year',{ascending:false}).limit(1).maybeSingle()]);setWeeklies(wg||[]);setQuarterly(qg||null);setLoading(false);}
-  useEffect(()=>{load();},[]);
-  async function save(){setSaving(true);if(form.id)await supabase.from('weekly_goals').update(form).eq('id',form.id);else await supabase.from('weekly_goals').insert(form);setSaving(false);setShowWeekly(false);load();}
-  const current=weeklies[0];
-  function Progress({label,actual,target,color}:{label:string;actual:number;target:number;color:string}){
-    const pct=target>0?Math.min(100,Math.round((actual/target)*100)):0;
-    return(<div style={{marginBottom:14}}><div style={{display:'flex',justifyContent:'space-between',marginBottom:4,fontSize:12}}><span style={{color:'#444140'}}>{label}</span><span style={{color:'#9A9188'}}>{actual}/{target}</span></div><div className="progress-bar"><div className="progress-fill" style={{width:pct+'%',background:color}}/></div></div>);
-  }
-  return(
-    <div style={{maxWidth:1100,animation:'slideUp 0.4s ease'}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:28}}>
-        <h1 className="font-display" style={{fontSize:34,fontWeight:400}}>Goals & Tracking</h1>
-        <button className="btn btn-primary" onClick={()=>{setForm({week_of:new Date().toISOString().split('T')[0],ac_posts_target:5,ac_posts_actual:0,dca_posts_target:3,dca_posts_actual:0,tiktok_posts_target:7,tiktok_posts_actual:0,strategy_calls_target:8,strategy_calls_actual:0,webinars_target:2,webinars_actual:0,revenue_target:0,revenue_actual:0,posting_streak:0});setShowWeekly(true);}}><Plus size={14}/> New Week</button>
-      </div>
-      {loading?<div style={{display:'grid',gap:16}}>{[1,2].map(i=><div key={i} className="skeleton" style={{height:200}}/>)}</div>:(
-        <div>
-          {quarterly&&<div className="card" style={{marginBottom:24,borderTop:'3px solid #B89A5A'}}>
-            <div className="font-display" style={{fontSize:20,marginBottom:20}}>Q{quarterly.quarter} {quarterly.year} Goals</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16}}>
-              <Progress label="Revenue" actual={quarterly.revenue_actual||0} target={quarterly.revenue_target||0} color="#B89A5A"/>
-              <Progress label="IG Followers" actual={quarterly.ig_followers_actual||0} target={quarterly.ig_followers_target||0} color="#2C2C2A"/>
-              <Progress label="DCA Clients" actual={quarterly.dca_clients_actual||0} target={quarterly.dca_clients_target||0} color="#C8432A"/>
-              <Progress label="TikTok Followers" actual={quarterly.tiktok_followers_actual||0} target={quarterly.tiktok_followers_target||0} color="#534AB7"/>
-            </div>
-          </div>}
-          {current&&<div className="card" style={{marginBottom:20}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
-              <div><div className="font-display" style={{fontSize:20}}>This Week</div><div style={{fontSize:12,color:'#9A9188'}}>Week of {new Date(current.week_of).toLocaleDateString('en-US',{month:'long',day:'numeric'})}</div></div>
-              <button className="btn btn-ghost" onClick={()=>{setForm(current);setShowWeekly(true);}} style={{fontSize:12}}>Update</button>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
-              <Progress label="AC Posts" actual={current.ac_posts_actual||0} target={current.ac_posts_target||0} color="#2C2C2A"/>
-              <Progress label="DCA Posts" actual={current.dca_posts_actual||0} target={current.dca_posts_target||0} color="#C8432A"/>
-              <Progress label="TikTok Posts" actual={current.tiktok_posts_actual||0} target={current.tiktok_posts_target||0} color="#534AB7"/>
-              <Progress label="Strategy Calls" actual={current.strategy_calls_actual||0} target={current.strategy_calls_target||0} color="#B89A5A"/>
-              <Progress label="Webinars" actual={current.webinars_actual||0} target={current.webinars_target||0} color="#185FA5"/>
-              <Progress label="Revenue" actual={current.revenue_actual||0} target={current.revenue_target||0} color="#B89A5A"/>
-            </div>
-          </div>}
-          {weeklies.length===0&&!quarterly&&<div style={{textAlign:'center',padding:'64px 0'}}><div style={{fontSize:13,color:'#9A9188',marginBottom:16}}>No goals set yet.</div><button className="btn btn-primary" onClick={()=>setShowWeekly(true)}>Set This Week's Goals</button></div>}
-        </div>
-      )}
-      {showWeekly&&<div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setShowWeekly(false)}><div className="modal" style={{maxWidth:500}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div className="font-display" style={{fontSize:22}}>{form.id?'Edit Week':'New Weekly Plan'}</div><button onClick={()=>setShowWeekly(false)} style={{background:'none',border:'none',cursor:'pointer',fontSize:20,color:'#9A9188'}}>×</button></div>
-        <div style={{marginBottom:12}}><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Week of</label><input className="input" type="date" value={form.week_of||''} onChange={e=>setForm({...form,week_of:e.target.value})} style={{width:160}}/></div>
-        {[{label:'AC Posts',tk:'ac_posts_target',ak:'ac_posts_actual'},{label:'DCA Posts',tk:'dca_posts_target',ak:'dca_posts_actual'},{label:'TikTok Posts',tk:'tiktok_posts_target',ak:'tiktok_posts_actual'},{label:'Strategy Calls',tk:'strategy_calls_target',ak:'strategy_calls_actual'},{label:'Webinars',tk:'webinars_target',ak:'webinars_actual'}].map(({label,tk,ak})=>(
-          <div key={tk} style={{display:'grid',gridTemplateColumns:'1fr 80px 80px',gap:8,alignItems:'center',marginBottom:8}}>
-            <span style={{fontSize:13,color:'#444140'}}>{label}</span>
-            <input className="input" type="number" value={form[tk]||0} onChange={e=>setForm({...form,[tk]:Number(e.target.value)})} style={{textAlign:'center'}}/>
-            <input className="input" type="number" value={form[ak]||0} onChange={e=>setForm({...form,[ak]:Number(e.target.value)})} style={{textAlign:'center'}}/>
-          </div>
-        ))}
-        <div style={{display:'flex',gap:10,marginTop:20,justifyContent:'flex-end'}}>
-          <button className="btn btn-ghost" onClick={()=>setShowWeekly(false)}>Cancel</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving...':'Save Week'}</button>
-        </div>
-      </div></div>}
-    </div>
-  );
-}
+const[wk,setWk]=useState<any[]>([]);
+const[qt,setQt]=useState<any[]>([]);
+const[ld,setLd]=useState(true);
+const[ow,setOw]=useState(false);
+const[oq,setOq]=useState(false);
+const[wf,setWf]=useState({d:"",at:"3",aa:"0",dt:"3",da:"0",tt:"5",ta:"0",wt:"2",wa:"0",ct:"5",ca:"0",rt:"10000",ra:"0",s:"0",p:""});
+const[qf,setQf]=useState({q:"Q2",y:"2026",rt:"90000",ra:"0",it:"15000",ia:"0",dt:"10",da:"0",tt:"10000",ta:"0"});
+const[sv,setSv]=useState(false);
+useEffect(()=>{go();},[]);
+async function go(){const[{data:w},{data:q}]=await Promise.all([supabase.from("weekly_goals").select("*").order("week_of",{ascending:false}).limit(8),supabase.from("quarterly_goals").select("*").order("year",{ascending:false}).limit(4)]);setWk(w||[]);setQt(q||[]);setLd(false);}
+const n=(s:string)=>Number(s)||0;
+async function sw(){if(!wf.d)return;setSv(true);await supabase.from("weekly_goals").insert({week_of:wf.d,ac_posts_target:n(wf.at),ac_posts_actual:n(wf.aa),dca_posts_target:n(wf.dt),dca_posts_actual:n(wf.da),lll_posts_target:2,lll_posts_actual:0,oog_posts_target:2,oog_posts_actual:0,tiktok_posts_target:n(wf.tt),tiktok_posts_actual:n(wf.ta),tiktok_lives_target:1,tiktok_lives_actual:0,webinars_target:n(wf.wt),webinars_actual:n(wf.wa),strategy_calls_target:n(wf.ct),strategy_calls_actual:n(wf.ca),revenue_target:n(wf.rt),revenue_actual:n(wf.ra),posting_streak:n(wf.s),top_3_priorities:wf.p||null});setSv(false);setOw(false);go();}
+async function sq(){setSv(true);await supabase.from("quarterly_goals").insert({quarter:qf.q,year:n(qf.y),revenue_target:n(qf.rt),revenue_actual:n(qf.ra),ig_followers_target:n(qf.it),ig_followers_actual:n(qf.ia),dca_clients_target:n(qf.dt),dca_clients_actual:n(qf.da),tiktok_followers_target:n(qf.tt),tiktok_followers_actual:n(qf.ta)});setSv(false);setOq(false);go();}
+const lw=wk[0];const lq=qt[0];
+return(<div style={{maxWidth:1000}}>
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28}}><h1 style={{fontFamily:"Georgia,serif",fontSize:34,fontWeight:400}}>Goals</h1><div style={{display:"flex",gap:10}}><button className="btn btn-ghost" onClick={()=>setOq(true)}><Plus size={14}/> Set Q Goal</button><button className="btn btn-primary" onClick={()=>setOw(true)}><Plus size={14}/> New Week</button></div></div>
+{ld?<div className="skeleton" style={{height:300}}/>:<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,marginBottom:20}}>
+<div className="card"><div style={{fontFamily:"Georgia,serif",fontSize:20,marginBottom:16}}>This Week</div>{lw?<div><Bar l="AC" a={lw.ac_posts_actual} t={lw.ac_posts_target} c="#2C2C2A"/><Bar l="DCA" a={lw.dca_posts_actual} t={lw.dca_posts_target} c="#C8432A"/><Bar l="TikTok" a={lw.tiktok_posts_actual} t={lw.tiktok_posts_target} c="#534AB7"/><Bar l="Webinars" a={lw.webinars_actual} t={lw.webinars_target} c="#185FA5"/><Bar l="Calls" a={lw.strategy_calls_actual} t={lw.strategy_calls_target} c="#B89A5A"/><Bar l="Revenue" a={lw.revenue_actual} t={lw.revenue_target} c="#B89A5A"/>{lw.top_3_priorities&&<div style={{marginTop:10,padding:10,background:"#F7F4F0",borderRadius:8}}><div style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",marginBottom:3}}>Priorities</div><div style={{fontSize:13,color:"#444140"}}>{lw.top_3_priorities}</div></div>}</div>:<div style={{textAlign:"center",padding:"24px 0"}}><div style={{fontSize:13,color:"#9A9188",marginBottom:10}}>No weekly goals.yet.</div><button className="btn btn-primary" onClick={()=>setOw(true)}>Set This Week</button></div>}</div>
+<div className="card"><div style={{fontFamily:"Georgia,serif",fontSize:20,marginBottom:16}}>{lq?lq.quarter+" "+lq.year:"Quarterly Goals"}</div>{lq?<div><Bar l="Revenue" a={lq.revenue_actual} t={lq.revenue_target} c="#B89A5A"/><Bar l="IG Followers" a={lq.ig_followers_actual} t={lq.ig_followers_target} c="#2C2C2A"/><Bar l="DCA Clients" a={lq.dca_clients_actual} t={lq.dca_clients_target} c="#C8432A"/><Bar l="TikTok" a={lq.tiktok_followers_actual} t={lq.tiktok_followers_target} c="#534AB7"/></div>:<div style={{textAlign:"center",padding:"24px 0"}}><div style={{fontSize:13,color:"#9A9188",marginBottom:10}}>No quarterly goals yet.</div><button className="btn btn-primary" onClick={()=>setOq(true)}>Set Q Goals</button></div>}</div>
+</div>}
+{wk.length>0&&<div className="card" style={{padding:0,overflow:"hidden",marginBottom:20}}><div style={{padding:"14px 20px",borderBottom:"1px solid #F7F4F0",fontFamily:"Georgia,serif",fontSize:16}}>History</div><table className="data-table"><thead><tr><th>Week</th><th>AC</th><th>DCA</th><th>TikTok</th><th>Revenue</th></tr></thead><tbody>{wk.map((w:any)=>(<tr key={w.id}><td style={{fontSize:12}}>{new Date(w.week_of).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</td><td>{w.ac_posts_actual}/{w.ac_posts_target}</td><td>{w.dca_posts_actual}/{w.dca_posts_target}</td><td>{w.tiktok_posts_actual}/{w.tiktok_posts_target}</td><td>${(w.revenue_actual||0).toLocaleString()}</td></tr>))}</tbody></table></div>}
+{ow&&<div className="modal-overlay" onClick={()=>setOw(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><div style={{fontFamily:"Georgia,serif",fontSize:22}}>New Week</div><button onClick={()=>setOw(false)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={18}/></button></div><div style={{display:"grid",gap:8}}><div><label style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:3}}>Week Of *</label><input type="date" className="input" value={wf.d} onChange={e=>setWf(f=>({...f,d:e.target.value}))}/></div>{[["AC Posts","at","aa"],["DCA Posts","dt","da"],["TikTok Posts","tt","ta"],["Webinars","wt","wa"],["Calls","ct","ca"],["Revenue","rt","ra"]].map(([lb,tk,ak])=>(<div key={lb}><label style={{fontSize:10,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:2}}>{lb} (Target / Actual)</label><div style={{display:"flex",gap:4}}><input className="input" type="number" placeholder="Target" style={{fontSize:11}} value={(wf as any)[tk]} onChange={e=>setWf(f=>({...f,[tk]:e.target.value}))}/><input className="input" type="number" placeholder="Actual" style={{fontSize:11}} value={(wf as any)[ak]} onChange={e=>setWf(f=>({...f,[ak]:e.target.value}))}/></div></div>))}<div><label style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:3}}>Top Priorities</label><textarea className="input" rows={2} value={wf.p} onChange={e=>setWf(f=>({...f,p:e.target.value}))}/></div></div><div style={{display:"flex",gap:10,marginTop:16,justifyContent:"flex-end"}}><button className="btn btn-ghost" onClick={()=>setOw(false)}>Cancel</button><button className="btn btn-primary" onClick={sw} disabled={sv}>{sv?"Saving...":"Save"}</button></div></div></div>}
+{oq&&<div className="modal-overlay" onClick={()=>setOq(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}><div style={{fontFamily:"Georgia,serif",fontSize:22}}>Set Q Goal</div><button onClick={()=>setOq(false)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={18}/></button></div><div style={{display:"grid",gap:8}}><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div><label style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:3}}>Quarter</label><select className="input" value={qf.q} onChange={e=>setQf(f=>({...f,q:e.target.value}))}><option>Q1</option><option>Q2</option><option>Q3</option><option>Q4</option></select></div><div><label style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:3}}>Year</label><input className="input" type="number" value={qf.y} onChange={e=>setQf(f=>({...f,y:e.target.value}))}/></div></div>{[["Revenue Target","rt"],["Revenue Actual","ra"],["IG Target","it"],["IG Actual","ia"],["DCA Clients Target","dt"],["DCA Clients Actual","da"],["TikTok Target","tt"],["TikTok Actual","ta"]].map(([lb,k])=>(<div key={k}><label style={{fontSize:11,textTransform:"uppercase",color:"#9A9188",display:"block",marginBottom:3}}>{lb}</label><input className="input" type="number" value={(qf as any)[k]} onChange={e=>setQf(f=>({...f,[k]:e.target.value}))}/></div>))}</div><div style={{display:"flex",gap:10,marginTop:16,justifyContent:"flex-end"}}><button className="btn btn-ghost" onClick={()=>setOq(false)}>Cancel</button><button className="btn btn-primary" onClick={sq} disabled={sv}>{sv?"Saving...":"Save"}</button></div></div></div>}
+</div>);}
