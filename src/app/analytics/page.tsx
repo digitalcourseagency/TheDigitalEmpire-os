@@ -1,33 +1,31 @@
 "use client";
 import{useEffect,useState}from"react";
 import{supabase}from"@/lib/supabase";
-import{Plus}from"lucide-react";
+import{Plus,X}from"lucide-react";
 export default function Page(){
   const[data,setData]=useState<any[]>([]);
   const[loading,setLoading]=useState(true);
-  useEffect(()=>{supabase.from("analytics").select("*").order("week_of",{ascending:false}).then(({data:d})=>{setData(d||[]);setLoading(false);});},[]);
+  const[open,setOpen]=useState(false);
+  const[form,setForm]=useState({week_of:'',ig_followers:'',ig_follower_growth:'',best_reel_views:'',manychat_dms:'',revenue_total:'',tiktok_views:'',posts_published:'',top_insight:''});
+  const[saving,setSaving]=useState(false);
+  useEffect(()=>{load();},[]);
+  async function load(){const{data:d}=await supabase.from('analytics').select('*').order('week_of',{ascending:false});setData(d||[]);setLoading(false);}
+  async function save(){
+    if(!form.week_of)return;
+    setSaving(true);
+    await supabase.from('analytics').insert({week_of:form.week_of,ig_followers:form.ig_followers?Number(form.ig_followers):null,ig_follower_growth:form.ig_follower_growth?Number(form.ig_follower_growth):null,best_reel_views:form.best_reel_views?Number(form.best_reel_views):null,manychat_dms:form.manychat_dms?Number(form.manychat_dms):null,revenue_total:form.revenue_total?Number(form.revenue_total):null,tiktok_views:form.tiktok_views?Number(form.tiktok_views):null,posts_published:form.posts_published?Number(form.posts_published):null,top_insight:form.top_insight||null});
+    setSaving(false);setOpen(false);setForm({week_of:'',ig_followers:'',ig_follower_growth:'',best_reel_views:'',manychat_dms:'',revenue_total:'',tiktok_views:'',posts_published:'',top_insight:''});load();
+  }
   const latest=data[0];
   return(
-    <div style={{maxWidth:1100,animation:"slideUp 0.4s ease"}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:28}}>
-        <div><h1 className="font-display" style={{fontSize:34,fontWeight:400}}>Analytics</h1><div style={{fontSize:13,color:"#9A9188",marginTop:2}}>Weekly performance tracking</div></div>
-        <button className="btn btn-primary"><Plus size={14}/> Log Week</button>
+    <div style={{maxWidth:1100}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:28}}>
+        <div><h1 style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:400}}>Analytics</h1><div style={{fontSize:13,color:'#9A9188',marginTop:2}}>Weekly performance tracking</div></div>
+        <button className="btn btn-primary" onClick={()=>setOpen(true)}><Plus size={14}/> Log Week</button>
       </div>
-      {latest&&<div className="card" style={{marginBottom:24}}>
-        <div className="font-display" style={{fontSize:20,marginBottom:16}}>Latest Snapshot</div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:16}}>
-          {[{label:"IG Followers",value:latest.ig_followers?.toLocaleString()||"—"},{label:"Best Reel Views",value:latest.best_reel_views?.toLocaleString()||"—"},{label:"ManyChat DMs",value:latest.manychat_dms?.toLocaleString()||"—"},{label:"Revenue",value:latest.revenue_total?"$"+latest.revenue_total.toLocaleString():"—"}].map(s=>(<div key={s.label} style={{textAlign:"center"}}><div className="font-display" style={{fontSize:28}}>{s.value}</div><div style={{fontSize:11,color:"#9A9188",marginTop:4,textTransform:"uppercase",letterSpacing:"0.08em"}}>{s.label}</div></div>))}
-        </div>
-      </div>}
-      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(
-        <div style={{textAlign:"center",padding:"64px 0"}}><div style={{fontSize:13,color:"#9A9188"}}>No analytics logged yet.</div></div>
-      ):(
-        <div className="card" style={{padding:0,overflow:"hidden"}}>
-          <table className="data-table"><thead><tr><th>Week</th><th>IG Followers</th><th>Growth</th><th>Best Reel</th><th>TikTok Views</th><th>Revenue</th></tr></thead>
-          <tbody>{data.map((e:any)=>(<tr key={e.id}><td style={{fontSize:12}}>{new Date(e.week_of).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</td><td>{e.ig_followers?.toLocaleString()||"—"}</td><td style={{color:(e.ig_follower_growth||0)>0?"#065F46":"#9A9188"}}>{e.ig_follower_growth?"+"+e.ig_follower_growth:"—"}</td><td>{e.best_reel_views?.toLocaleString()||"—"}</td><td>{e.tiktok_views?.toLocaleString()||"—"}</td><td style={{fontWeight:500}}>{e.revenue_total?"$"+e.revenue_total.toLocaleString():"—"}</td></tr>))}
-          </tbody></table>
-        </div>
-      )}
+      {latest&&<div className="card" style={{marginBottom:24}}><div style={{fontFamily:'Georgia,serif',fontSize:20,marginBottom:16}}>Latest Snapshot</div><div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:16}}>{[{label:'IG Followers',value:latest.ig_followers?.toLocaleString()||'—'},{label:'Best Reel Views',value:latest.best_reel_views?.toLocaleString()||'—'},{label:'ManyChat DMs',value:latest.manychat_dms?.toLocaleString()||'—'},{label:'Revenue',value:latest.revenue_total?'$'+latest.revenue_total.toLocaleString():'—'}].map(s=>(<div key={s.label} style={{textAlign:'center'}}><div style={{fontFamily:'Georgia,serif',fontSize:28}}>{s.value}</div><div style={{fontSize:11,color:'#9A9188',marginTop:4,textTransform:'uppercase',letterSpacing:'0.08em'}}>{s.label}</div></div>))}</div></div>}
+      {loading?<div className="skeleton" style={{height:200}}/>:data.length===0?(<div style={{textAlign:'center',padding:'64px 0'}}><div style={{fontSize:13,color:'#9A9188',marginBottom:12}}>No analytics logged yet.</div><button className="btn btn-primary" onClick={()=>setOpen(true)}>Log Your First Week</button></div>):(<div className="card" style={{padding:0,overflow:'hidden'}}><table className="data-table"><thead><tr><th>Week</th><th>IG Followers</th><th>Growth</th><th>Best Reel</th><th>TikTok</th><th>Revenue</th></tr></thead><tbody>{data.map((e:any)=>(<tr key={e.id}><td style={{fontSize:12}}>{new Date(e.week_of).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</td><td>{e.ig_followers?.toLocaleString()||'—'}</td><td style={{color:(e.ig_follower_growth||0)>0?'#065F46':'#9A9188'}}>{e.ig_follower_growth?'+'+e.ig_follower_growth:'—'}</td><td>{e.best_reel_views?.toLocaleString()||'—'}</td><td>{e.tiktok_views?.toLocaleString()||'—'}</td><td style={{fontWeight:500}}>{e.revenue_total?'$'+e.revenue_total.toLocaleString():'—'}</td></tr>))}</tbody></table></div>)}
+      {open&&<div className="modal-overlay" onClick={()=>setOpen(false)}><div className="modal" onClick={e=>e.stopPropagation()}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div style={{fontFamily:'Georgia,serif',fontSize:22}}>Log Week</div><button onClick={()=>setOpen(false)} style={{background:'none',border:'none',cursor:'pointer'}}><X size={18}/></button></div><div style={{display:'grid',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Week Of *</label><input type="date" className="input" value={form.week_of} onChange={e=>setForm(f=>({...f,week_of:e.target.value}))}/></div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>IG Followers</label><input className="input" type="number" placeholder="8000" value={form.ig_followers} onChange={e=>setForm(f=>({...f,ig_followers:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Follower Growth</label><input className="input" type="number" placeholder="+120" value={form.ig_follower_growth} onChange={e=>setForm(f=>({...f,ig_follower_growth:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Best Reel Views</label><input className="input" type="number" placeholder="45000" value={form.best_reel_views} onChange={e=>setForm(f=>({...f,best_reel_views:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>ManyChat DMs</label><input className="input" type="number" placeholder="230" value={form.manychat_dms} onChange={e=>setForm(f=>({...f,manychat_dms:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>TikTok Views</label><input className="input" type="number" placeholder="12000" value={form.tiktok_views} onChange={e=>setForm(f=>({...f,tiktok_views:e.target.value}))}/></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Revenue</label><input className="input" type="number" placeholder="5000" value={form.revenue_total} onChange={e=>setForm(f=>({...f,revenue_total:e.target.value}))}/></div></div><div><label style={{fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188',display:'block',marginBottom:4}}>Top Insight</label><textarea className="input" rows={2} placeholder="What worked best this week?" value={form.top_insight} onChange={e=>setForm(f=>({...f,top_insight:e.target.value}))}/></div></div><div style={{display:'flex',gap:10,marginTop:20,justifyContent:'flex-end'}}><button className="btn btn-ghost" onClick={()=>setOpen(false)}>Cancel</button><button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving...':'Save'}</button></div></div></div>}
     </div>
   );
 }
