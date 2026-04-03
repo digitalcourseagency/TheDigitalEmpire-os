@@ -1,13 +1,2 @@
-"use client";
-import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { Plus, Users } from "lucide-react";
-export default function CallsPage() {
-  const [calls, setCalls] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  async function load() { setLoading(true); const { data } = await supabase.from("calls").select("*").order("call_date", { ascending: false }); setCalls(data || []); setLoading(false); }
-  useEffect(() => { load(); }, []);
-  const totalRevenue = calls.reduce((s, c) => s + (c.revenue || 0), 0);
-  const closes = calls.filter(c => c.outcome === "Closed").length;
-  return (<div style={{ maxWidth: 1100, animation: "slideUp 0.4s ease" }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}><h1 className="font-display" style={{ fontSize: 34, fontWeight: 400 }}>Sales Calls</h1><button className="btn btn-primary"><Plus size={14} /> Log Call</button></div><div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 24 }}><div className="card" style={{ borderTop: "3px solid #B89A5A" }}><div style={{ fontSize: 11, color: "#9A9188" }}>Revenue Closed</div><div className="font-display" style={{ fontSize: 28 }}>${totalRevenue.toLocaleString()}</div></div><div className="card" style={{ borderTop: "3px solid #065F46" }}><div style={{ fontSize: 11, color: "#9A9188" }}>Closes</div><div className="font-display" style={{ fontSize: 28 }}>{closes}</div></div><div className="card" style={{ borderTop: "3px solid #2C2C2A" }}><div style={{ fontSize: 11, color: "#9A9188" }}>Total Calls</div><div className="font-display" style={{ fontSize: 28 }}>{calls.length}</div></div></div>{loading ? <div className="skeleton" style={{ height: 200 }} /> : calls.length === 0 ? (<div style={{ textAlign: "center", padding: "48px 0" }}><Users size={32} color="#B8B0A5" style={{ margin: "0 auto 12px" }} /><div style={{ fontSize: 13, color: "#9A9188", marginBottom: 12 }}>No calls logged yet.</div><button className="btn btn-primary">Log First Call</button></div>) : (<div className="card" style={{ padding: 0, overflow: "hidden" }}><table className="data-table"><thead><tr><th>Date</th><th>Lead</th><th>Outcome</th><th>Revenue</th><th>Closer</th></tr></thead><tbody>{calls.map(c => <tr key={c.id}><td style={{ fontSize: 12, color: "#9A9188" }}>{c.call_date}</td><td>{c.lead_name}</td><td><span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 100, background: c.outcome === "Closed" ? "#D1FAE5" : "#EDE8E1", color: c.outcome === "Closed" ? "#065F46" : "#9A9188" }}>{c.outcome}</span></td><td style={{ fontWeight: c.revenue ? 500 : 300, color: c.revenue ? "#065F46" : "#9A9188" }}>{c.revenue ? `$${c.revenue.toLocaleString()}` : "—"}</td><td style={{ fontSize: 12 }}>{c.closer}</td></tr>)}</tbody></table></div>)}</div>);
-}
+import{redirect}from"next/navigation";
+export default function CallsPage(){redirect('/dashboard');}
