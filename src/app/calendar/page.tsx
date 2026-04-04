@@ -1,6 +1,163 @@
 "use client";
-import{useEffect,useState}from"react";
-import{supabase}from"@/lib/supabase";
-import{ChevronLeft,ChevronRight}from"lucide-react";
-const BRANDS=[{id:'20e8bb0e-29fd-492e-ad91-2beb239e4b0f',abbr:'AC',color:'#2C2C2A'},{id:'caa9919a-5fe0-4e67-844a-fd75f3170516',abbr:'DCA',color:'#C8432A'},{id:'ba48df91-58dc-4471-93f4-1c2a9ba69d35',abbr:'DES',color:'#185FA5'},{id:'a80ef03f-697b-47da-9c73-81b9b4d2717e',abbr:'LLL',color:'#888480'},{id:'f4aec731-0842-493e-b17f-56e5265318ac',abbr:'OOG',color:'#B89A5A'},{id:'41d737ec-4a5a-425c-9f1e-ad509988c3d8',abbr:'TDI',color:'#534AB7'}];
-export default function CalendarPage(){const[year,setYear]=useState(new Date().getFullYear());const[month,setMonth]=useState(new Date().getMonth());const[posts,setPosts]=useState<any[]>([]);const[shoots,setShoots]=useState<any[]>([]);const[launches,setLaunches]=useState<any[]>([]);useEffect(()=>{load();},[year,month]);async function load(){const start=new Date(year,month,1).toISOString().split('T')[0];const end=new Date(year,month+1,0).toISOString().split('T')[0];const[{data:p},{data:s},{data:l}]=await Promise.all([supabase.from('posts').select('*').gte('publish_date',start).lte('publish_date',end),supabase.from('shoots').select('*').gte('shoot_date',start).lte('shoot_date',end),supabase.from('launches').select('*').gte('launch_date',start).lte('launch_date',end)]);setPosts(p||[]);setShoots(s||[]);setLaunches(l||[]);}const dim=new Date(year,month+1,0).getDate();const fd=new Date(year,month,1).getDay();const mn=new Date(year,month).toLocaleDateString('en-US',{month:'long',year:'numeric'});const today=new Date();function prev(){if(month===0){setMonth(11);setYear(y=>y-1);}else setMonth(m=>m-1);}function next(){if(month===11){setMonth(0);setYear(y=>y+1);}else setMonth(m=>m+1);}function evs(day:number){const d=String(day).padStart(2,'0');const mo=String(month+1).padStart(2,'0');const date=year+'-'+mo+'-'+d;const ev:any[]=[];posts.filter(p=>p.publish_date?.startsWith(date)).forEach(p=>{const b=BRANDS.find(x=>x.id===p.brand_id);ev.push({label:p.title,color:b?.color||'#B89A5A'});});shoots.filter(s=>s.shoot_date?.startsWith(date)).forEach(s=>ev.push({label:s.name,color:'#185FA5'}));launches.filter(l=>l.launch_date?.startsWith(date)).forEach(l=>ev.push({label:l.name,color:'#C8432A'}));return ev;}const cells:any[]=[];for(let i=0;i<fd;i++)cells.push(null);for(let d=1;d<=dim;d++)cells.push(d);return(<div style={{maxWidth:1100}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:28}}><h1 style={{fontFamily:'Georgia,serif',fontSize:34,fontWeight:400}}>Content Calendar</h1><div style={{display:'flex',alignItems:'center',gap:16}}><button onClick={prev} className="btn btn-ghost" style={{padding:'6px 10px'}}><ChevronLeft size={16}/></button><span style={{fontFamily:'Georgia,serif',fontSize:18,minWidth:180,textAlign:'center'}}>{mn}</span><button onClick={next} className="btn btn-ghost" style={{padding:'6px 10px'}}><ChevronRight size={16}/></button></div></div><div style={{display:'flex',gap:16,marginBottom:16}}>{[{color:'#B89A5A',label:'Posts'},{color:'#185FA5',label:'Shoots'},{color:'#C8432A',label:'Launches'}].map(l=>(<div key={l.label} style={{display:'flex',alignItems:'center',gap:6,fontSize:12,color:'#7D7470'}}><div style={{width:10,height:10,borderRadius:'50%',background:l.color}}/>{l.label}</div>))}</div><div className="card" style={{padding:0,overflow:'hidden'}}><div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',borderBottom:'1px solid #EDE8E1'}}>{['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>(<div key={d} style={{padding:'10px 0',textAlign:'center',fontSize:11,letterSpacing:'0.08em',textTransform:'uppercase',color:'#9A9188'}}>{d}</div>))}</div><div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)'}}>{cells.map((day,i)=>{const isT=day&&day===today.getDate()&&month===today.getMonth()&&year===today.getFullYear();const events=day?evs(day):[];return(<div key={i} style={{minHeight:100,padding:'8px',borderRight:i%7!==6?'1px solid #F7F4F0':'none',borderBottom:i<cells.length-7?'1px solid #F7F4F0':'none',background:day?'white':'#FDFCFA'}}>{day&&<div style={{width:24,height:24,borderRadius:'50%',background:isT?'#1A1917':'transparent',color:isT?'white':'#444140',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,marginBottom:4}}>{day}</div>}{events.slice(0,3).map((ev:any,j:number)=>(<div key={j} style={{fontSize:10,padding:'2px 6px',borderRadius:4,background:ev.color+'22',color:ev.color,marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{ev.label}</div>))}{events.length>3&&<div style={{fontSize:10,color:'#9A9188'}}>+{events.length-3}</div>}</div>);})}</div></div></div>);}
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { ChevronLeft, ChevronRight, Grid3X3 } from "lucide-react";
+import { useRouter } from "next/navigation";
+
+const BRANDS: Record<string,{color:string,code:string}> = {
+  "20e8bb0e-29fd-492e-ad91-2beb239e4b0f": { color:"#2C2C2A", code:"AC" },
+  "caa9919a-5fe0-4e67-844a-fd75f3170516": { color:"#C8432A", code:"DCA" },
+  "ba48df91-58dc-4471-93f4-1c2a9ba69d35": { color:"#185FA5", code:"DES" },
+  "f4aec731-0842-493e-b17f-56e5265318ac": { color:"#B89A5A", code:"OOG" },
+  "a80ef03f-697b-47da-9c73-81b9b4d2717e": { color:"#888480", code:"LLL" },
+};
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+export default function CalendarPage() {
+  const router = useRouter();
+  const today = new Date();
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [posts, setPosts] = useState<any[]>([]);
+  const [shoots, setShoots] = useState<any[]>([]);
+  const [launches, setLaunches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hoveredPost, setHoveredPost] = useState<any>(null);
+  const [hoverPos, setHoverPos] = useState({ x:0, y:0 });
+
+  useEffect(() => { loadAll(); }, [year, month]);
+
+  async function loadAll() {
+    const start = `${year}-${String(month+1).padStart(2,"0")}-01`;
+    const lastDay = new Date(year, month+1, 0).getDate();
+    const end = `${year}-${String(month+1).padStart(2,"0")}-${String(lastDay).padStart(2,"0")}`;
+    const [{ data: p }, { data: s }, { data: l }] = await Promise.all([
+      supabase.from("posts").select("id,title,scheduled_date,brand_id,status,type,thumbnail_url,is_carousel,hook").gte("scheduled_date", start).lte("scheduled_date", end),
+      supabase.from("shoots").select("id,name,shoot_date,status").gte("shoot_date", start).lte("shoot_date", end),
+      supabase.from("launches").select("id,name,launch_date,end_date,brand_id,status").gte("launch_date", start).lte("launch_date", end),
+    ]);
+    setPosts(p || []);
+    setShoots(s || []);
+    setLaunches(l || []);
+    setLoading(false);
+  }
+
+  function prevMonth() {
+    if (month === 0) { setYear(y => y-1); setMonth(11); }
+    else setMonth(m => m-1);
+  }
+  function nextMonth() {
+    if (month === 11) { setYear(y => y+1); setMonth(0); }
+    else setMonth(m => m+1);
+  }
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const cells: (number|null)[] = [...Array(firstDay).fill(null), ...Array.from({length:daysInMonth},(_,i)=>i+1)];
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  function dateStr(day: number) {
+    return `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+  }
+  function postsForDay(day: number) {
+    const d = dateStr(day);
+    return posts.filter(p => p.scheduled_date === d);
+  }
+  function shootsForDay(day: number) {
+    const d = dateStr(day);
+    return shoots.filter(s => s.shoot_date === d);
+  }
+  function launchesForDay(day: number) {
+    const d = dateStr(day);
+    return launches.filter(l => l.launch_date <= d && (!l.end_date || l.end_date >= d));
+  }
+
+  const isToday = (day: number) => day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+  return (
+    <div style={{ maxWidth:1100 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24 }}>
+        <div>
+          <h1 style={{ fontFamily:"Georgia,serif", fontSize:34, fontWeight:400 }}>Calendar</h1>
+          <div style={{ fontSize:13, color:"#9A9188", marginTop:2 }}>Posts, shoots, and launches at a glance</div>
+        </div>
+        <button className="btn btn-ghost" onClick={() => router.push("/grid")} style={{ display:"flex", alignItems:"center", gap:6 }}>
+          <Grid3X3 size={14}/> Grid Preview
+        </button>
+      </div>
+
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+        <button onClick={prevMonth} style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 10px", borderRadius:8, color:"#9A9188" }}><ChevronLeft size={18}/></button>
+        <div style={{ fontFamily:"Georgia,serif", fontSize:22 }}>{MONTHS[month]} {year}</div>
+        <button onClick={nextMonth} style={{ background:"none", border:"none", cursor:"pointer", padding:"6px 10px", borderRadius:8, color:"#9A9188" }}><ChevronRight size={18}/></button>
+      </div>
+
+      <div style={{ display:"flex", gap:16, marginBottom:12 }}>
+        {[["#B89A5A","Post"],["#7B5EA7","Shoot"],["#2C9D6A","Launch"]].map(([c,l]) => (
+          <div key={l} style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:"#9A9188" }}>
+            <div style={{ width:8, height:8, borderRadius:"50%", background:c }}/>
+            {l}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(7, 1fr)", border:"0.5px solid #EDE8E1", borderRadius:12, overflow:"hidden" }}>
+        {DAYS.map(d => (
+          <div key={d} style={{ padding:"8px 10px", fontSize:10, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.06em", color:"#9A9188", borderBottom:"0.5px solid #EDE8E1", textAlign:"center", background:"#FDFCFA" }}>{d}</div>
+        ))}
+        {cells.map((day, idx) => {
+          if (!day) return <div key={`e-${idx}`} style={{ minHeight:100, background:"#FDFCFA", borderRight:idx%7!==6?"0.5px solid #EDE8E1":"none", borderBottom:"0.5px solid #EDE8E1" }}/>;
+          const dayPosts = postsForDay(day);
+          const dayShoots = shootsForDay(day);
+          const dayLaunches = launchesForDay(day);
+          return (
+            <div key={`d-${day}-${idx}`} style={{ minHeight:100, padding:"6px 6px 4px", borderRight:idx%7!==6?"0.5px solid #EDE8E1":"none", borderBottom:"0.5px solid #EDE8E1", background:isToday(day)?"#FFF8F0":"var(--color-background-primary)" }}>
+              <div style={{ fontSize:12, fontWeight:isToday(day)?700:400, color:isToday(day)?"#B89A5A":"#1A1917", marginBottom:4, width:22, height:22, display:"flex", alignItems:"center", justifyContent:"center", borderRadius:"50%", background:isToday(day)?"#B89A5A22":"transparent" }}>{day}</div>
+
+              {dayLaunches.map(l => (
+                <div key={l.id} style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"#2C9D6A22", color:"#2C9D6A", marginBottom:2, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>🚀 {l.name}</div>
+              ))}
+
+              {dayShoots.map(s => (
+                <div key={s.id} style={{ fontSize:9, padding:"1px 5px", borderRadius:4, background:"#7B5EA722", color:"#7B5EA7", marginBottom:2, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis" }}>📷 {s.name}</div>
+              ))}
+
+              {dayPosts.map(post => {
+                const brand = BRANDS[post.brand_id];
+                return (
+                  <div
+                    key={post.id}
+                    onClick={() => router.push(`/posts?highlight=${post.id}`)}
+                    onMouseEnter={e => {
+                      setHoveredPost(post);
+                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                      setHoverPos({ x: rect.left, y: rect.top });
+                    }}
+                    onMouseLeave={() => setHoveredPost(null)}
+                    style={{ fontSize:9, padding:"2px 5px", borderRadius:4, background:(brand?.color||"#B89A5A")+"22", color:brand?.color||"#B89A5A", marginBottom:2, overflow:"hidden", whiteSpace:"nowrap", textOverflow:"ellipsis", cursor:"pointer", borderLeft:`2px solid ${brand?.color||"#B89A5A"}` }}
+                  >
+                    {post.title}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {hoveredPost && (
+        <div style={{ position:"fixed", top:Math.max(hoverPos.y - 130, 10), left:Math.min"hoverPos.x + 10, window.innerWidth - 260), width:240, background:"var(--color-background-primary)", border:"0.5px solid #EDE8E1", borderRadius:10, padding:"10px 12px", boxShadow:"0 8px 24px rgba(0,0,0,0.12)", zIndex:999, pointerEvents:"none" }}>
+          <div style={{ fontSize:12, fontWeight:500, color:"#1A1917", marginBottom:4 }}>{hoveredPost.title}</div>
+          {hoveredPost.hook && <div style={{ fontSize:11, color:"#7D7470", fontStyle:"italic", marginBottom:6 }}>"{hoveredPost.hook.slice(0,80)}{hoveredPost.hook.length>80?"...":""}"</div>}
+          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+            <span style={{ fontSize:10, padding:"1px 6px", borderRadius:100, background:"#EDE8E1", color:"#7D7470" }}>{hoveredPost.type}</span>
+            <span style={{ fontSize:10, padding:"1px 6px", borderRadius:100, background:"#EDE8E1", color:"#7D7470" }}>{hoveredPost.status}</span>
+            {hoveredPost.is_carousel && <span style={{ fontSize:10, padding:"1px 6px", borderRadius:100, background:"#185FA522", color:"#185FA5" }}>Carousel</span>}
+          </div>
+          <div style={{ fontSize:10, color:"#B89A5A", marginTop:6 }}>Click to view post →</div>
+        </div>
+      )}
+    </div>
+  );
+}
