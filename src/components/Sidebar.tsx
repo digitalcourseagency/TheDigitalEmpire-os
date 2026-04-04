@@ -1,45 +1,62 @@
 "use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { LayoutDashboard, Lightbulb, BarChart2, Hash, Camera, TrendingUp, BookOpen, Calendar, Grid3X3, Phone, Target, Rocket, FileText, Star, DollarSign, Mail } from "lucide-react";
-
-const NAV = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/posts", label: "Posts", icon: FileText },
-  { href: "/ideas", label: "Ideas", icon: Lightbulb },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
-  { href: "/grid", label: "Grid Preview", icon: Grid3X3 },
-  { href: "/analytics", label: "Analytics", icon: BarChart2 },
-  { href: "/goals", label: "Goals", icon: Target },
-  { href: "/launches", label: "Launches", icon: Rocket },
-  { href: "/series", label: "Series", icon: BookOpen },
-  { href: "/trending", label: "Trending", icon: TrendingUp },
-  { href: "/keywords", label: "Keywords", icon: Hash },
-  { href: "/shoots", label: "Shoots", icon: Camera },
-  { href: "/inspo", label: "Inspo Vault", icon: Star },
-  { href: "/substack", label: "Substack", icon: Mail },
-  { href: "/brand-deals", label: "Brand Deals", icon: DollarSign },
+import{useState}from"react";
+import Link from"next/link";
+import{usePathname}from"next/navigation";
+import{LayoutDashboard,FileText,Lightbulb,BarChart2,Hash,Camera,TrendingUp,BookOpen,CalendarDays,Phone,Target,Rocket,Sparkles,Grid,BookMarked,Handshake}from"lucide-react";
+const brands=[
+  {code:"AC",label:"Ash Couture",color:"#2C2C2A"},
+  {code:"DCA",label:"Digital Course Agency",color:"#C8432A"},
+  {code:"DES",label:"Digital Expert School",color:"#185FA5"},
+  {code:"OOG",label:"Opulent Outreach Group",color:"#B89A5A"},
+  {code:"LLL",label:"Lux Leisure Lifestyle",color:"#888480"},
 ];
-
-export default function Sidebar() {
-  const path = usePathname();
-  return (
-    <aside style={{ width: 220, flexShrink: 0, background: "var(--color-background-secondary)", borderRight: "0.5px solid var(--color-border)", height: "100vh", position: "sticky", top: 0, display: "flex", flexDirection: "column", overflowY: "auto" }}>
-      <div style={{ padding: "28px 20px 16px", borderBottom: "0.5px solid var(--color-border)" }}>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: 15, color: "var(--color-ink-primary)", letterSpacing: "0.02em" }}>The Digital Empire</div>
-        <div style={{ fontSize: 10, color: "var(--color-ink-tertiary)", marginTop: 2, textTransform: "uppercase", letterSpacing: "0.08em" }}>Content OS</div>
+const nav=[
+  {href:"/dashboard",icon:LayoutDashboard,label:"Dashboard"},
+  {href:"/posts",icon:FileText,label:"Posts"},
+  {href:"/calendar",icon:CalendarDays,label:"Calendar"},
+  {href:"/ideas",icon:Lightbulb,label:"Ideas"},
+  {href:"/launches",icon:Rocket,label:"Launches"},
+  {href:"/goals",icon:Target,label:"Goals"},
+  {href:"/analytics",icon:BarChart2,label:"Analytics"},
+  {href:"/keywords",icon:Hash,label:"Keywords"},
+  {href:"/shoots",icon:Camera,label:"Shoots"},
+  {href:"/trending",icon:TrendingUp,label:"Trending"},
+  {href:"/series",icon:BookOpen,label:"Series"},
+  {href:"/inspo",icon:Sparkles,label:"Inspo Vault"},
+  {href:"/grid",icon:Grid,label:"Grid Preview"},
+  {href:"/substack",icon:BookMarked,label:"Substack"},
+  {href:"/brand-deals",icon:Handshake,label:"Brand Deals"},
+];
+export default function Sidebar(){
+  const path=usePathname();
+  const[brand,setBrand]=useState("AC");
+  const active=brands.find(b=>b.code===brand)||brands[0];
+  return(
+    <aside style={{width:220,minHeight:"100vh",background:"#FDFCFA",borderRight:"0.5px solid #EDE8E1",display:"flex",flexDirection:"column",flexShrink:0}}>
+      <div style={{padding:"20px 16px 12px"}}>
+        <div style={{fontFamily:"Georgia,serif",fontSize:15,color:"#1A1917",marginBottom:2}}>The Digital Empire</div>
+        <div style={{fontSize:10,color:"#9A9188",letterSpacing:"0.05em",textTransform:"uppercase"}}>Content OS</div>
       </div>
-      <nav style={{ padding: "12px 10px", flex: 1 }}>
-        {NAV.map(({ href, label, icon: Icon }) => {
-          const active = path === href || (href !== "/dashboard" && path.startsWith(href));
-          return (
-            <Link key={href} href={href} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", borderRadius: 8, marginBottom: 2, textDecoration: "none", background: active ? "var(--color-gold-light)" : "transparent", color: active ? "var(--color-gold)" : "var(--color-ink-secondary)", fontFamily: "Jost, sans-serif", fontSize: 13, fontWeight: active ? 500 : 400, transition: "all 0.15s" }}>
-              <Icon size={15} />
+      <div style={{padding:"8px 12px 12px"}}>
+        <select value={brand} onChange={e=>setBrand(e.target.value)} style={{width:"100%",fontSize:11,padding:"6px 8px",borderRadius:8,border:"0.5px solid #EDE8E1",background:"#F5F1EC",color:active.color,fontWeight:500,cursor:"pointer",appearance:"none"}}>
+          {brands.map(b=><option key={b.code} value={b.code} style={{color:b.color}}>{b.code} · {b.label}</option>)}
+        </select>
+      </div>
+      <nav style={{flex:1,padding:"4px 8px",overflowY:"auto"}}>
+        {nav.map(({href,icon:Icon,label})=>{
+          const isActive=path===href||(href!=="/dashboard"&&path.startsWith(href));
+          return(
+            <Link key={href} href={href} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:8,marginBottom:1,background:isActive?"#EDE8E1":"transparent",color:isActive?"#1A1917":"#7D7470",fontSize:12,fontWeight:isActive?500:400,textDecoration:"none",transition:"all 0.1s"}}>
+              <Icon size={15} style={{flexShrink:0,color:isActive?active.color:"#B8B0A5"}}/>
               {label}
             </Link>
           );
         })}
       </nav>
+      <div style={{padding:"12px 16px",borderTop:"0.5px solid #EDE8E1"}}>
+        <div style={{width:8,height:8,borderRadius:"50%",background:active.color,display:"inline-block",marginRight:6}}/>
+        <span style={{fontSize:10,color:"#9A9188"}}>{active.label}</span>
+      </div>
     </aside>
   );
 }
