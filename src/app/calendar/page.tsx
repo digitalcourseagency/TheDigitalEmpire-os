@@ -80,8 +80,8 @@ export default function CalendarPage(){
               <div style={{width:24,height:24,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isToday?"#1A1917":"transparent",color:isToday?"#FDFCFA":"#444140",fontSize:12,fontWeight:isToday?600:400,marginBottom:4}}>{d}</div>
               {items.launches.map(l=><div key={l.id} onClick={()=>setSelected({type:"launch",...l})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#C8432A22",color:"#C8432A",marginBottom:2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.name}</div>)}
               {items.shoots.map(s=><div key={s.id} onClick={()=>setSelected({type:"shoot",...s})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#185FA522",color:"#185FA5",marginBottom:2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.name}</div>)}
-              {items.lives.map(l=><div key={l.id} onClick={()=>setSelected({type:"live",...l})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#2C9D6A22",color:"#2C9D6A",marginBottom,2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.title}</div>)}
-              {items.posts.map(p=><div key={p.id} onClick={()=>setSelected({type:"post",...p})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#B89A5A22",color:"#B89A5A",marginBottom2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.caption?.slice(0,25)||"Post"}</div>)}
+              {items.lives.map(l=><div key={l.id} onClick={()=>setSelected({type:"live",...l})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#2C9D6A22",color:"#2C9D6A",marginBottom:2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{l.title}</div>)}
+              {items.posts.map(p=><div key={p.id} onClick={()=>setSelected({type:"post",...p})} style={{fontSize:10,padding:"2px 5px",borderRadius:3,background:"#B89A5A22",color:"#B89A5A",marginBottom:2,cursor:"pointer",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.caption?.slice(0,25)||"Post"}</div>)}
             </>}
           </div>);
         })}
@@ -113,7 +113,7 @@ export default function CalendarPage(){
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             <span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"#2C9D6A22",color:"#2C9D6A"}}>{selected.event_type}</span>
             <span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"#EDE8E1",color:"#7D7470"}}>{selected.platform}</span>
-            <span style={{fontSize:10,color:"#9A9188"}}>{selected.event_date}{selected.event_time?" · "+selected.event_time:""}</span>
+            <span style={{fontSize:10,color:"#9A9188"}}>{selected.event_date}{selected.event_time?" Â· "+selected.event_time:""}</span>
           </div>
           {selected.topic&&<div><div style={{fontSize:9,textTransform:"uppercase",color:"#B8B0A5",marginBottom:2}}>Topic</div><div style={{fontSize:12,color:"#444140"}}>{selected.topic}</div></div>}
           {selected.cta&&<div><div style={{fontSize:9,textTransform:"uppercase",color:"#B8B0A5",marginBottom:2}}>CTA</div><div style={{fontSize:12,color:"#444140"}}>{selected.cta}</div></div>}
@@ -124,7 +124,7 @@ export default function CalendarPage(){
     </div>)}
     {liveOpen&&(<div className="modal-overlay" onClick={()=>setLiveOpen(false)}>
       <div className="modal" style={{maxWidth:560}} onClick={e=>e.stopPropagation()}>
-        <div style={{display:"flex",jstifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
           <div style={{fontFamily:"Georgia,serif",fontSize:22}}>{editingLive?"Edit Live Event":"Schedule Live Event"}</div>
           <button onClick={()=>setLiveOpen(false)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={18}/></button>
         </div>
