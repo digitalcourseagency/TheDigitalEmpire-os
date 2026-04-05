@@ -98,7 +98,7 @@ export default function CalendarPage(){
           </div>
         </div>
         {selected.type==="post"&&(<div style={{display:"grid",gap:8}}>
-          {{(selected.reel_cover_url||selected.thumbnail_url||selected.media_url)&&<img src={selected.reel_cover_url||selected.thumbnail_url||selected.media_url} style={{width:"100%",height:180,objectFit:"cover",borderRadius:8}}/>}
+          {(selected.reel_cover_url||selected.thumbnail_url||selected.media_url)&&<img src={selected.reel_cover_url||selected.thumbnail_url||selected.media_url} style={{width:"100%",height:180,objectFit:"cover",borderRadius:8}}/>}
           <div style={{fontSize:13,color:"#444140"}}>{selected.caption||"No caption"}</div>
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             <span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"#EDE8E1",color:"#7D7470"}}>{selected.platform}</span>
@@ -113,7 +113,7 @@ export default function CalendarPage(){
           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
             <span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"#2C9D6A22",color:"#2C9D6A"}}>{selected.event_type}</span>
             <span style={{fontSize:10,padding:"2px 8px",borderRadius:100,background:"#EDE8E1",color:"#7D7470"}}>{selected.platform}</span>
-            <span style={{fontSize:10,color:"#9A9188"}}>{selected.event_date}{selected.event_time?" Â· "+selected.event_time:""}</span>
+            <span style={{fontSize:10,color:"#9A9188"}}>{selected.event_date}{selected.event_time?" · "+selected.event_time:""}</span>
           </div>
           {selected.topic&&<div><div style={{fontSize:9,textTransform:"uppercase",color:"#B8B0A5",marginBottom:2}}>Topic</div><div style={{fontSize:12,color:"#444140"}}>{selected.topic}</div></div>}
           {selected.cta&&<div><div style={{fontSize:9,textTransform:"uppercase",color:"#B8B0A5",marginBottom:2}}>CTA</div><div style={{fontSize:12,color:"#444140"}}>{selected.cta}</div></div>}
