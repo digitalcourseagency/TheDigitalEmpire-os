@@ -2,14 +2,8 @@
 import{useState}from"react";
 import Link from"next/link";
 import{usePathname}from"next/navigation";
-import{LayoutDashboard,FileText,Lightbulb,BarChart2,Hash,Camera,TrendingUp,BookOpen,CalendarDays,Phone,Target,Rocket,Sparkles,Grid,BookMarked,Handshake}from"lucide-react";
-const brands=[
-  {code:"AC",label:"Ash Couture",color:"#2C2C2A"},
-  {code:"DCA",label:"Digital Course Agency",color:"#C8432A"},
-  {code:"DES",label:"Digital Expert School",color:"#185FA5"},
-  {code:"OOG",label:"Opulent Outreach Group",color:"#B89A5A"},
-  {code:"LLL",label:"Lux Leisure Lifestyle",color:"#888480"},
-];
+import{LayoutDashboard,FileText,Lightbulb,BarChart2,Hash,Camera,TrendingUp,BookOpen,CalendarDays,Target,Rocket,Sparkles,Grid,BookMarked,Handshake}from"lucide-react";
+const brands=[{code:"AC",label:"Ash Couture",color:"#2C2C2A"},{code:"DCA",label:"Digital Course Agency",color:"#C8432A"},{code:"DES",label:"Digital Expert School",color:"#185FA5"},{code:"OOG",label:"Opulent Outreach Group",color:"#B89A5A"},{code:"LLL",label:"Lux Leisure Lifestyle",color:"#888480"}];
 const nav=[
   {href:"/dashboard",icon:LayoutDashboard,label:"Dashboard"},
   {href:"/posts",icon:FileText,label:"Posts"},
@@ -34,7 +28,7 @@ export default function Sidebar(){
   return(
     <aside style={{width:220,minHeight:"100vh",background:"#FDFCFA",borderRight:"0.5px solid #EDE8E1",display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"20px 16px 12px"}}>
-        <div style={{fontFamily:"Georgia,serif",fontSize:15,color:"#1A1917",marginBottom:2}}>The Digital Empire</div>
+        <div style={{fontFamily:"Georgia,serif",fontSize:15,color:"#1A1917",marginBottom:2}}>Ash Couture</div>
         <div style={{fontSize:10,color:"#9A9188",letterSpacing:"0.05em",textTransform:"uppercase"}}>Content OS</div>
       </div>
       <div style={{padding:"8px 12px 12px"}}>
